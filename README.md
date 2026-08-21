@@ -47,3 +47,52 @@ GLP-1 receptor agonists (e.g., Semaglutide, Tirzepatide, Liraglutide) have trans
 └── dashboards/               # Looker Studio Report links, embedded views, and dashboard exports
     ├── screenshots/          # Static snapshots of dashboard pages
     └── looker_studio_link.md # Link to interactive Looker Studio report
+
+```
+
+### Q1: Proportional Adverse Event Severity (Overall vs. First 3 Years Post-Approval)
+
+#### Business / Clinical Question
+Which specific GLP-1 drug (e.g., *Semaglutide*, *Tirzepatide*, *Liraglutide*) has the highest proportion of adverse event reports flagged as **Serious** vs. **Non-Serious**, and how does this change when controlling for the drug's age/market release date?
+
+---
+
+#### BigQuery SQL Code
+```sql
+WITH drug_info AS (
+  SELECT
+    generic_name,
+    fda_first_approval_date
+  FROM `rasikatest.faers_glp1.drugs_overview`
+),
+events_with_age AS (
+  SELECT
+    a.generic_name,
+    a.safetyreportid,
+    a.serious,
+    d.fda_first_approval_date,
+    DATE_DIFF(a.receive_date, d.fda_first_approval_date, YEAR) AS years_since_approval
+  FROM `rasikatest.faers_glp1.adverse_events` a
+  JOIN drug_info d
+    ON a.generic_name = d.generic_name
+)
+SELECT
+  generic_name,
+  ROUND(COUNTIF(serious = TRUE) / COUNT(*) * 100, 2) AS overall_serious_rate,
+  ROUND(COUNTIF(serious = FALSE) / COUNT(*) * 100, 2) AS overall_non_serious_rate,
+  ROUND(
+    SAFE_DIVIDE(
+      COUNTIF(serious = TRUE AND years_since_approval <= 3),
+      COUNTIF(years_since_approval <= 3)
+    ) * 100, 
+    2
+  ) AS first_3_year_serious_rate
+FROM events_with_age
+GROUP BY generic_name
+ORDER BY first_3_year_serious_rate DESC;
+
+```
+#### Analytical Insights & Takeaways:
+1. Lifecycle Bias Adjustment (Weber Effect): Looking only at overall numbers makes lixisenatide (61.40%) and liraglutide (51.87%) appear to have the highest severity profiles. However, isolating the first 3 years post-approval shows semaglutide held the highest initial severity rate at 49.88%, compared to liraglutide's early 24.69%. Liraglutide's overall severity rose over time as milder reports decreased and late-lifecycle reporting skewed toward severe institutional cases.
+2. Consumer-Driven Volume Dilution: Tirzepatide exhibits a substantially lower serious rate (17.12%), driven by high consumer adoption and high-volume reporting of non-serious side effects (e.g., mild nausea, GI discomfort, injection-site issues) that expand the non-serious denominator.
+3. Data Boundary Note: Exenatide returns null for its 3-year post-approval metric because its initial FDA approval date (2005) precedes the timeframe of the dataset records.
