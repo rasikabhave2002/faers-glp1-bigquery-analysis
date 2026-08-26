@@ -96,3 +96,47 @@ ORDER BY first_3_year_serious_rate DESC;
 1. Lifecycle Bias Adjustment (Weber Effect): Looking only at overall numbers makes lixisenatide (61.40%) and liraglutide (51.87%) appear to have the highest severity profiles. However, isolating the first 3 years post-approval shows semaglutide held the highest initial severity rate at 49.88%, compared to liraglutide's early 24.69%. Liraglutide's overall severity rose over time as milder reports decreased and late-lifecycle reporting skewed toward severe institutional cases.
 2. Consumer-Driven Volume Dilution: Tirzepatide exhibits a substantially lower serious rate (17.12%), driven by high consumer adoption and high-volume reporting of non-serious side effects (e.g., mild nausea, GI discomfort, injection-site issues) that expand the non-serious denominator.
 3. Data Boundary Note: Exenatide returns null for its 3-year post-approval metric because its initial FDA approval date (2005) precedes the timeframe of the dataset records.
+
+### Q2: GI vs. Systemic Adverse Event Signals
+
+#### Business / Clinical Question
+What percentage of adverse event reports per drug are Gastrointestinal (GI) — nausea, vomiting, gastroparesis — compared to Pancreatic/Endocrine or Psychiatric systemic signals — pancreatitis, thyroid-related events, suicidal ideation?
+
+---
+#### BigQuery SQL Code
+``` sql
+SELECT 
+  generic_name,
+
+  ROUND(
+    COUNT(DISTINCT CASE 
+      WHEN LOWER(reaction) IN ('nausea', 'vomiting', 'gastroparesis')
+      THEN safetyreportid 
+    END)
+    / COUNT(DISTINCT safetyreportid) * 100,
+    2
+  ) AS GI_adverse_events,
+
+  ROUND(
+    COUNT(DISTINCT CASE 
+      WHEN LOWER(reaction) = 'pancreatitis'
+        OR LOWER(reaction) LIKE '%thyroid%'
+        OR LOWER(reaction) = 'suicidal ideation'
+      THEN safetyreportid 
+    END)
+    / COUNT(DISTINCT safetyreportid) * 100,
+    2
+  ) AS systemic_adverse_events,
+
+  COUNT(DISTINCT safetyreportid) AS total_reports
+
+FROM `rasikatest.faers_glp1.adverse_events`
+GROUP BY generic_name
+ORDER BY GI_adverse_events DESC;
+```
+
+#### Analytical Insights & Takeaways:
+1. Dulaglutide has the highest proportion of GI signals: GI-related events appear in 25.71% of dulaglutide reports, followed by semaglutide (20.14%) and liraglutide (18.74%). This indicates that GI reactions represent a prominent component of the reported safety profile for these therapies.
+2. Liraglutide has the highest proportion of systemic signals: At 7.58%, liraglutide has the highest systemic adverse-event proportion among the drugs with substantial reporting volume. This is more than twice the systemic proportion observed for semaglutide (3.38%) and dulaglutide (3.44%).
+3. GI signals are more prevalent than systemic signals across most drugs: The difference is particularly pronounced for tirzepatide, where GI signals occur in approximately 16 times as many reports as systemic signals. Semaglutide also shows a substantial difference, with GI signals occurring approximately 6 times as often.
+4. Lixisenatide results should be interpreted cautiously: While lixisenatide shows a systemic signal proportion of 5.26%, this is based on only 19 total reports. Its small sample size makes the percentage highly unstable and unsuitable for direct comparison with drugs having thousands of reports.
