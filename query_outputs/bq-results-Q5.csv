@@ -1,0 +1,26 @@
+age_bracket,reaction,reaction_count
+18-45,Incorrect dose administered,1064
+18-45,Nausea,959
+18-45,Injection site pain,648
+18-45,Vomiting,570
+18-45,Off label use,534
+46-65,Nausea,2538
+46-65,Incorrect dose administered,1377
+46-65,Vomiting,1248
+46-65,Injection site pain,1157
+46-65,Diarrhoea,1077
+65+,Nausea,1034
+65+,Blood glucose increased,861
+65+,Diarrhoea,570
+65+,Vomiting,552
+65+,Weight decreased,532
+Under 18,Nausea,14
+Under 18,Vomiting,10
+Under 18,Headache,6
+Under 18,Off label use,6
+Under 18,Diarrhoea,4
+Unknown Age,Nausea,3084
+Unknown Age,Blood glucose increased,1360
+Unknown Age,Device use error,1323
+Unknown Age,Vomiting,1281
+Unknown Age,Diarrhoea,1126
