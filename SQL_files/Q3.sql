@@ -1,0 +1,1 @@
+# Q3 (Off-Label Brand Differences): Is there a statistical variance in reported adverse events or outcome severity between Ozempic (Type 2 Diabetes indication) and Wegovy (Obesity indication), despite both sharing the same active molecule (Semaglutide)?
