@@ -292,3 +292,42 @@ ORDER BY age_bracket, reaction_rank ASC;
 1. Age groups show distinct adverse-event profiles. Nausea is consistently among the top reported reactions across all age groups, but the secondary signals differ. 18–45 stands out for Incorrect dose administered (1,064 reports), while 65+ shows Blood glucose increased (861) and Weight decreased (532) among its top reactions.
 2. Administration-related issues are particularly prominent among adults aged 18–45. Incorrect dose administered is the #1 reported reaction for the 18–45 group (1,064 reports), ahead of nausea (959). In contrast, nausea ranks first among both the 46–65 and 65+ groups. This may indicate a stronger reporting signal around medication administration among younger adult users.
 3. Pediatric reports are substantially fewer and should be interpreted cautiously. The Under-18 group has very few reports compared with older age groups (only 14 nausea and 10 vomiting reports among the top reactions). This likely reflects the much smaller number of pediatric reports in the dataset, so the results should not be interpreted as evidence of lower pediatric risk without accounting for the underlying population/report volume.
+
+#### Q6: Gender Skew & Serious Outcomes
+
+#### Business / Clinical Question
+Females account for a large majority of weight-loss drug prescriptions; controlling for total report volume, do male patients show a higher or lower probability of experiencing hospitalization or life-threatening outcomes?
+
+---
+#### BigQuery SQL Code
+``` sql
+SELECT
+  LOWER(patient_sex) AS patient_sex,
+  COUNT(DISTINCT safetyreportid) AS report_count,
+  COUNT(
+    DISTINCT (
+      CASE
+        WHEN
+          seriousness_hospitalization = TRUE
+          OR seriousness_lifethreatening = TRUE
+          THEN safetyreportid
+        END)) AS serious_outcome_count,
+  ROUND(
+    COUNT(
+      DISTINCT (
+        CASE
+          WHEN
+            seriousness_hospitalization = TRUE
+            OR seriousness_lifethreatening = TRUE
+            THEN safetyreportid
+          END))
+      / COUNT(DISTINCT safetyreportid) * 100,
+    2) AS serious_rate
+FROM `rasikatest.faers_glp1.adverse_events`
+WHERE patient_sex IS NOT NULL AND LOWER(patient_sex) IN ('male', 'female')
+GROUP BY patient_sex;
+```
+
+#### Analytical Insights & Takeaways:
+1. Gender-based severity skew: Male patients had a higher proportion of reported serious outcomes than female patients. 15.46% of male reports involved hospitalization or life-threatening outcomes, compared with 10.08% of female reports—a difference of 5.38 percentage points and approximately a 53% higher proportion among male reports.
+2. This suggests a notable gender skew in the severity of reported adverse events. However, because FAERS is a spontaneous reporting system, this should be interpreted as a difference in reported-event severity, not evidence that male patients have a 53% higher clinical risk. Differences in drug utilization, patient characteristics, reporting behavior, and other confounders may contribute to the observed pattern.
