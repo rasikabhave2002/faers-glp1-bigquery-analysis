@@ -140,3 +140,105 @@ ORDER BY GI_adverse_events DESC;
 2. Liraglutide has the highest proportion of systemic signals: At 7.58%, liraglutide has the highest systemic adverse-event proportion among the drugs with substantial reporting volume. This is more than twice the systemic proportion observed for semaglutide (3.38%) and dulaglutide (3.44%).
 3. GI signals are more prevalent than systemic signals across most drugs: The difference is particularly pronounced for tirzepatide, where GI signals occur in approximately 16 times as many reports as systemic signals. Semaglutide also shows a substantial difference, with GI signals occurring approximately 6 times as often.
 4. Lixisenatide results should be interpreted cautiously: While lixisenatide shows a systemic signal proportion of 5.26%, this is based on only 19 total reports. Its small sample size makes the percentage highly unstable and unsuitable for direct comparison with drugs having thousands of reports.
+
+#### Q3: Off-Label Brand Differences — Ozempic vs. Wegovy
+
+#### Business / Clinical Question
+Is there a difference in reported adverse-event outcome severity between Ozempic (Type 2 Diabetes indication) and Wegovy (Obesity indication), despite both sharing the same active molecule, semaglutide?
+
+---
+#### BigQuery SQL Code
+``` sql
+SELECT
+  brand_queried,
+  ROUND(
+    COUNT(DISTINCT CASE 
+      WHEN serious = TRUE THEN safetyreportid 
+    END)
+    / COUNT(DISTINCT safetyreportid)
+    * 100,
+    2
+  ) AS severity_rate,
+  COUNT(DISTINCT safetyreportid) AS report_ct
+FROM `rasikatest.faers_glp1.adverse_events`
+WHERE
+  LOWER(generic_name) = 'semaglutide'
+  AND LOWER(brand_queried) IN ('wegovy', 'ozempic')
+GROUP BY brand_queried
+ORDER BY report_ct DESC, severity_rate DESC;
+```
+
+#### Analytical Insights & Takeaways:
+1. Ozempic has a higher reported severity proportion: 39.42% of Ozempic reports were classified as serious compared with 34.48% for Wegovy, resulting in a 4.94 percentage-point difference.
+The comparison uses equal report volumes: Both brands contain exactly 5,000 unique adverse-event reports in the analyzed dataset. This provides a balanced reporting sample for comparing the observed proportion of serious reports between the two brands.
+2. Same molecule, different reported safety profile: Although both products contain semaglutide, Ozempic shows a higher proportion of serious reports than Wegovy. This difference may reflect variations in indication, underlying patient population, comorbidities, treatment patterns, or adverse-event reporting behavior.
+3. Indication may be an important confounding factor: Ozempic is primarily associated with Type 2 Diabetes treatment, whereas Wegovy is indicated for chronic weight management. Patients using the two products may therefore differ substantially in baseline health status and comorbidities, which could influence the severity of reported outcomes.
+4. The result does not establish causation or that Ozempic is inherently less safe: FAERS is a spontaneous reporting database and does not provide a denominator for total drug exposure. A higher proportion of serious reports does not necessarily mean a higher underlying risk of serious adverse events.
+5. Statistical significance requires an additional test: The 4.94 percentage-point difference demonstrates an observed difference in the dataset, but the current SQL does not test whether that difference is statistically significant. A chi-square test or two-proportion z-test would be required to determine whether the observed difference is unlikely to have occurred by chance.
+
+#### Q4: Injection Site & Administration Error Signals
+
+#### Business / Clinical Question
+Did the rate of user-administration errors (e.g., pen failure, injection site reaction, wrong dosage) spike during periods of known national supply shortages (2022–2024) compared to normal supply periods? 
+
+---
+#### BigQuery SQL Code
+``` sql
+WITH classified_reports AS (
+  SELECT
+    safetyreportid,
+    receive_date,
+
+    CASE
+      WHEN receive_date BETWEEN DATE '2022-12-01' AND DATE '2024-12-31'
+        THEN 'Shortage Period'
+      ELSE 'Normal Supply Period'
+    END AS supply_period,
+
+    CASE
+      WHEN
+        (
+          LOWER(reaction) LIKE '%injection site%'
+          OR LOWER(reaction) LIKE '%infusion site%'
+          OR LOWER(reaction) LIKE '%error%'
+          OR LOWER(reaction) LIKE '%wrong%'
+          OR LOWER(reaction) LIKE '%incorrect%'
+        )
+        AND LOWER(reaction) NOT LIKE '%terror%'
+      THEN 1
+      ELSE 0
+    END AS admin_error_signal
+
+  FROM `rasikatest.faers_glp1.adverse_events`
+)
+
+SELECT
+  supply_period,
+
+  COUNT(DISTINCT safetyreportid) AS overall_report_count,
+
+  COUNT(
+    DISTINCT CASE
+      WHEN admin_error_signal = 1
+      THEN safetyreportid
+    END
+  ) AS admin_error_report_count,
+
+  ROUND(
+    COUNT(
+      DISTINCT CASE
+        WHEN admin_error_signal = 1
+        THEN safetyreportid
+      END
+    )
+    / COUNT(DISTINCT safetyreportid) * 100,
+    2
+  ) AS admin_error_rate
+
+FROM classified_reports
+GROUP BY supply_period
+ORDER BY supply_period;
+```
+#### Analytical Insights & Takeaways:
+1. Administration-related safety signals were slightly more prevalent during documented GLP-1 shortage periods. The signal rate was 29.95% during shortage periods compared with 27.67% during normal supply periods, representing a 2.28 percentage-point difference (approximately 8.2% relative increase). This suggests a potential association between supply shortages and increased reporting of injection-site/administration-related safety signals. However, the increase was relatively modest and should not be interpreted as evidence that shortages directly caused administration errors.
+2. FAERS is a spontaneous adverse-event reporting system, so these results reflect reporting patterns rather than true population-level incidence. Additional statistical testing and adjustment for product, reporting volume, and other confounders would be needed to establish whether the difference is statistically meaningful.
