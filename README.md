@@ -242,3 +242,53 @@ ORDER BY supply_period;
 #### Analytical Insights & Takeaways:
 1. Administration-related safety signals were slightly more prevalent during documented GLP-1 shortage periods. The signal rate was 29.95% during shortage periods compared with 27.67% during normal supply periods, representing a 2.28 percentage-point difference (approximately 8.2% relative increase). This suggests a potential association between supply shortages and increased reporting of injection-site/administration-related safety signals. However, the increase was relatively modest and should not be interpreted as evidence that shortages directly caused administration errors.
 2. FAERS is a spontaneous adverse-event reporting system, so these results reflect reporting patterns rather than true population-level incidence. Additional statistical testing and adjustment for product, reporting volume, and other confounders would be needed to establish whether the difference is statistically meaningful.
+
+#### Q5: Age-Group Risk Mapping
+
+#### Business / Clinical Question
+How does the breakdown of top reported side effects differ across age brackets (e.g., under 18 pediatric/adolescent, 18–45, 46–65, and 65+ elderly) 
+
+---
+#### BigQuery SQL Code
+``` sql
+WITH
+  report_count AS (
+    SELECT
+      CASE
+        WHEN patient_age < 18 THEN 'Under 18'
+        WHEN patient_age BETWEEN 18 AND 45 THEN '18-45'
+        WHEN patient_age BETWEEN 46 AND 65 THEN '46-65'
+        WHEN patient_age > 65 THEN '65+'
+        ELSE 'Unknown Age'
+        END
+        AS age_bracket,
+      reaction,
+      COUNT(DISTINCT safetyreportid) AS reaction_count
+    FROM `rasikatest.faers_glp1.adverse_events`
+    WHERE reaction IS NOT NULL
+    GROUP BY age_bracket, reaction
+  ),
+  ranked AS (
+    SELECT
+      age_bracket,
+      reaction,
+      reaction_count,
+      RANK()
+        OVER (PARTITION BY age_bracket ORDER BY reaction_count DESC)
+        AS reaction_rank
+    FROM report_count
+    ORDER BY age_bracket, reaction_rank ASC
+  )
+SELECT
+  age_bracket,
+  reaction,
+  reaction_count
+FROM ranked
+WHERE reaction_rank <= 5
+ORDER BY age_bracket, reaction_rank ASC;
+```
+
+#### Analytical Insights & Takeaways:
+1. Age groups show distinct adverse-event profiles. Nausea is consistently among the top reported reactions across all age groups, but the secondary signals differ. 18–45 stands out for Incorrect dose administered (1,064 reports), while 65+ shows Blood glucose increased (861) and Weight decreased (532) among its top reactions.
+2. Administration-related issues are particularly prominent among adults aged 18–45. Incorrect dose administered is the #1 reported reaction for the 18–45 group (1,064 reports), ahead of nausea (959). In contrast, nausea ranks first among both the 46–65 and 65+ groups. This may indicate a stronger reporting signal around medication administration among younger adult users.
+3. Pediatric reports are substantially fewer and should be interpreted cautiously. The Under-18 group has very few reports compared with older age groups (only 14 nausea and 10 vomiting reports among the top reactions). This likely reflects the much smaller number of pediatric reports in the dataset, so the results should not be interpreted as evidence of lower pediatric risk without accounting for the underlying population/report volume.
