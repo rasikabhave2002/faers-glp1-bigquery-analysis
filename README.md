@@ -331,3 +331,84 @@ GROUP BY patient_sex;
 #### Analytical Insights & Takeaways:
 1. Gender-based severity skew: Male patients had a higher proportion of reported serious outcomes than female patients. 15.46% of male reports involved hospitalization or life-threatening outcomes, compared with 10.08% of female reports—a difference of 5.38 percentage points and approximately a 53% higher proportion among male reports.
 2. This suggests a notable gender skew in the severity of reported adverse events. However, because FAERS is a spontaneous reporting system, this should be interpreted as a difference in reported-event severity, not evidence that male patients have a 53% higher clinical risk. Differences in drug utilization, patient characteristics, reporting behavior, and other confounders may contribute to the observed pattern.
+
+#### Q7: Global Geographic Discrepancies
+
+#### Business / Clinical Question
+What are the top 5 countries originating reports outside the US, and do international safety reports show a different primary reaction signature compared to US-based FDA FAERS reports?
+
+---
+#### BigQuery SQL Code
+``` sql
+WITH country_counts AS (
+  SELECT
+    country,
+    COUNT(DISTINCT safetyreportid) AS report_count
+  FROM `faers_glp1.adverse_events`
+  WHERE LOWER(country) != 'us'
+  GROUP BY country
+),
+
+top5_countries AS (
+  SELECT
+    country,
+    report_count
+  FROM country_counts
+  ORDER BY report_count DESC
+  LIMIT 5
+),
+
+us_reactions AS (
+  SELECT
+    reaction,
+    COUNT(DISTINCT safetyreportid) AS report_count
+  FROM `faers_glp1.adverse_events`
+  WHERE LOWER(country) = 'us'
+  GROUP BY reaction
+),
+
+international_reactions AS (
+  SELECT
+    reaction,
+    COUNT(DISTINCT safetyreportid) AS report_count
+  FROM `faers_glp1.adverse_events`
+  WHERE country IN (
+    SELECT country
+    FROM top5_countries
+  )
+  GROUP BY reaction
+),
+
+us_total AS (
+  SELECT SUM(report_count) AS total_reports
+  FROM us_reactions
+),
+
+international_total AS (
+  SELECT SUM(report_count) AS total_reports
+  FROM international_reactions
+)
+
+SELECT
+  'US' AS region,
+  reaction,
+  report_count,
+  ROUND(report_count / total_reports * 100, 2) AS reaction_share_pct
+FROM us_reactions
+CROSS JOIN us_total
+QUALIFY ROW_NUMBER() OVER (ORDER BY report_count DESC) = 1
+
+UNION ALL
+
+SELECT
+  'Top 5 International Countries' AS region,
+  reaction,
+  report_count,
+  ROUND(report_count / total_reports * 100, 2) AS reaction_share_pct
+FROM international_reactions
+CROSS JOIN international_total
+QUALIFY ROW_NUMBER() OVER (ORDER BY report_count DESC) = 1;
+```
+
+#### Analytical Insights & Takeaways:
+The primary reaction signature is consistent across US and international reports, with Nausea ranking as the most frequently reported reaction in both groups. However, Nausea represents a smaller share of reports from the top 5 international countries (3.46%) compared with US reports (5.34%), suggesting some variation in the distribution of secondary reactions across geographic regions.
