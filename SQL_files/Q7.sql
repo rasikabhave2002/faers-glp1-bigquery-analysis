@@ -1,0 +1,1 @@
+# Q7 (Global Geographic Discrepancies): What are the top 5 countries originating reports outside the US, and do international safety reports show a different primary reaction signature compared to US-based FDA FAERS reports?
