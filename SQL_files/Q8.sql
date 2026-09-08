@@ -1,0 +1,1 @@
+# Q8 (Post-Marketing Surveillance Velocity): What is the growth rate (month-over-month) of FAERS adverse event submissions following major FDA regulatory approvals (e.g., Zepbound approval in late 2023 vs. Wegovy in 2021)?

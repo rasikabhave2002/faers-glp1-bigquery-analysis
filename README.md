@@ -412,3 +412,37 @@ QUALIFY ROW_NUMBER() OVER (ORDER BY report_count DESC) = 1;
 
 #### Analytical Insights & Takeaways:
 The primary reaction signature is consistent across US and international reports, with Nausea ranking as the most frequently reported reaction in both groups. However, Nausea represents a smaller share of reports from the top 5 international countries (3.46%) compared with US reports (5.34%), suggesting some variation in the distribution of secondary reactions across geographic regions.
+
+#### Q8: Post-Marketing Surveillance Velocity
+
+#### Business / Clinical Question
+What is the growth rate (month-over-month) of FAERS adverse event submissions following major FDA regulatory approvals (e.g., Zepbound approval in late 2023 vs. Wegovy in 2021)?
+
+---
+#### BigQuery SQL Code
+``` sql
+WITH
+  monthly_reports AS (
+    SELECT
+      FORMAT_DATE('%Y-%m', receive_date) AS report_month,
+      COUNT(DISTINCT safetyreportid) AS report_count
+    FROM `rasikatest.faers_glp1.adverse_events`
+    GROUP BY report_month
+    ORDER BY report_month
+  )
+SELECT
+  report_month,
+  report_count,
+  LAG(report_count) OVER (ORDER BY report_month) AS prev_report_count,
+  ROUND(
+    (report_count - LAG(report_count) OVER (ORDER BY report_month))
+      / NULLIF(LAG(report_count) OVER (ORDER BY report_month), 0)
+      * 100,
+    2) AS growth_rate
+FROM monthly_reports
+WHERE report_month >= '2021-01'
+ORDER BY report_month;
+```
+
+#### Analytical Insights & Takeaways:
+FAERS reporting showed high month-over-month volatility around major GLP-1 regulatory milestones. Following the late-2023 Zepbound approval period, reports surged 878.62% MoM in January 2024 (145 → 1,419) and reached 1,488 reports by July 2024. In comparison, the 2021 Wegovy period showed smaller but intermittent spikes, including 403.92% in March and 436.67% in July. Overall, the post-2023 period demonstrated substantially higher reporting activity, although the fluctuations suggest that factors beyond approval timing also influenced submission volume.
