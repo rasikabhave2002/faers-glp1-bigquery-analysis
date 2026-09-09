@@ -506,3 +506,73 @@ ORDER BY report_year ASC;
 #### Analytical Insights & Takeaways:
 1. The annual trends suggest that GLP-1-related search interest and FAERS reporting volumes can move in the same direction during certain periods, particularly in 2022 and 2024, but the relationship is not consistently aligned. The divergence in 2023 demonstrates that increasing public search interest does not necessarily correspond to an immediate increase in adverse-event reporting.
 2. Because this analysis uses annual observations and the current lead/lag fields represent year-over-year changes rather than Pearson correlation coefficients or p-values, the results should be interpreted as a descriptive lead/lag analysis rather than evidence of statistically significant correlation or causation.
+
+#### Q10: Media Anomaly Detection
+
+#### Business / Clinical Question
+Using rolling averages (e.g., 30-day moving average), can we isolate temporary "anomalies" or sudden surges in reporting for specific reactions (like Diarrhoea or Constipation) following major news or social media trends?
+
+---
+#### BigQuery SQL Code
+``` sql
+WITH
+  daily_reports AS (
+    SELECT
+      receive_date,
+      COUNT(DISTINCT safetyreportid) AS report_count
+    FROM `rasikatest.faers_glp1.adverse_events`
+    WHERE LOWER(reaction) IN ('diarrhoea', 'constipation')
+    GROUP BY receive_date
+  ),
+  rolling_avg AS (
+    SELECT
+      d.receive_date AS report_date,
+      d.report_count,
+      ROUND(
+        (
+          SELECT AVG(d2.report_count)
+          FROM daily_reports d2
+          WHERE
+            d2.receive_date
+            BETWEEN DATE_SUB(d.receive_date, INTERVAL 29 DAY)
+            AND d.receive_date
+        ),
+        2) AS rolling_30_day_avg
+    FROM daily_reports d
+  ),
+  daily_searches AS (
+    SELECT
+      date AS search_date,
+      SUM(search_interest) AS search_interests
+    FROM `rasikatest.faers_glp1.search_trends`
+    WHERE term IS NOT NULL
+    GROUP BY search_date
+  )
+SELECT
+  r.report_date,
+  r.report_count,
+  r.rolling_30_day_avg,
+  ROUND(
+    (r.report_count - r.rolling_30_day_avg)
+      / NULLIF(r.rolling_30_day_avg, 0)
+      * 100,
+    2) AS anomaly_pct,
+  CASE
+    WHEN r.report_count > r.rolling_30_day_avg * 2
+      THEN 'Anomaly'
+    WHEN r.report_count > r.rolling_30_day_avg * 1.5
+      THEN 'Elevated'
+    ELSE 'Normal'
+    END AS anomaly_status,
+  COALESCE(s.search_interests, 0) AS search_interests
+FROM rolling_avg r
+LEFT JOIN daily_searches s
+  ON r.report_date = s.search_date
+ORDER BY report_date ASC;
+```
+#### Analytical Insights & Takeaways:
+1. Single-day spikes dominate and they look administrative, not media-driven: The dataset contains dozens of single-day report count spikes that are 5–17x the rolling 30-day average, then revert to baseline the very next reporting day. This "spike-then-immediate-reversion" shape (no multi-day ramp-up or gradual decay) is the classic signature of batch/bulk case entry into FAERS (e.g., a manufacturer or law firm submitting a backlog of reports on one date) rather than an organic surge in real-world adverse events triggered by news coverage. A genuine media-driven anomaly would typically show a sustained elevation across several days to weeks as public awareness builds and fades.
+2. Search interest data is sparse and monthly, not daily: search_interests is populated almost exclusively on the 1st of each month , with 0 on all other days. This means the LEFT JOIN only aligns search data with report anomalies roughly once a month it cannot support day-level correlation claims. Any "search spike coincided with report spike" conclusion should be caveated: we're really comparing monthly search snapshots to daily report data.
+3. Search interest shows a clear structural break around 2022: From 2013–2021, search_interests is 0 almost everywhere, with only a few small non-zero blips (e.g., 3, 5, 9, 21, 22, 37, 56, 76).
+Starting 2022-08-01, values jump into the hundreds and grow steadily. This growth pattern tracks the well-documented public/media surge in interest around GLP‑1 drugs (Ozempic/Wegovy/semaglutide) from 2022 onwards consistent with the dataset being GLP‑1-drug-related adverse events.
+4. No clear causal link between the search-interest ramp and report anomalies: The largest, most extreme report anomalies (787%–1,722% spikes) occurred before search interest data even registers above zero (2014–2020). Meanwhile, in 2022–2025 — when search interest is at its highest and growing — the anomaly spikes are still present but generally less extreme in percentage terms (mostly 300–800% vs. the >1000% outliers from the pre-2022 period), likely because the baseline (rolling average) itself is higher by then.

@@ -1,0 +1,1 @@
+# Q10 (Media Anomaly Detection): Using rolling averages (e.g., 30-day moving average), can we isolate temporary "anomalies" or sudden surges in reporting for specific reactions (like gastroparesis or hair loss) following major news or social media trends?
