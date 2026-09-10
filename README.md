@@ -756,3 +756,55 @@ ORDER BY post_marketing_report_count DESC;
 2. Albiglutide had the highest normalized reporting rate at 333.02 per 100 participants, followed by exenatide (48.49) and tirzepatide (30.91).
 3. Lixisenatide had the lowest rate among approved drugs (0.50 per 100 participants).
 4. Overall, greater Phase 3 enrollment did not consistently correspond to higher post-marketing reporting rates, indicating substantial variation in real-world reporting across drugs.
+
+#### Q13: Clinical Conditions & Serious Outcomes
+
+#### Business / Clinical Question 
+Which conditions represented in GLP-1 clinical trials are associated with the highest volume of serious real-world FAERS reports?
+
+---
+#### BigQuery SQL Code
+``` sql
+WITH
+  drug_conditions AS (
+    SELECT DISTINCT
+      LOWER(TRIM(drug_query)) AS generic_name,
+      conditions
+    FROM `rasikatest.faers_glp1.clinical_trials`
+    WHERE
+      drug_query IS NOT NULL
+      AND conditions IS NOT NULL
+  ),
+  serious_reports AS (
+    SELECT
+      LOWER(TRIM(generic_name)) AS generic_name,
+      safetyreportid
+    FROM `rasikatest.faers_glp1.adverse_events`
+    WHERE
+      seriousness_death = TRUE
+      AND generic_name IS NOT NULL
+    GROUP BY generic_name, safetyreportid
+  ),
+  condition_summary AS (
+    SELECT
+      dc.conditions,
+      COUNT(DISTINCT sr.safetyreportid) AS serious_report_count
+    FROM drug_conditions dc
+    JOIN serious_reports sr
+      ON dc.generic_name = sr.generic_name
+    GROUP BY dc.conditions
+  )
+SELECT
+  conditions,
+  serious_report_count
+FROM condition_summary
+ORDER BY serious_report_count DESC
+LIMIT 10;
+```
+
+#### Analytical Insights & Takeaways:
+Type 2 diabetes-related conditions dominated serious FAERS reports, with Diabetes Mellitus, Type 2 recording the highest volume at 1,293 reports.
+Other closely related Type 2 diabetes labels followed closely: Diabetes Mellitus (1,286) and Type 2 Diabetes / Type 2 Diabetes Mellitus (1,285 each).
+Type 1 diabetes also showed substantial reporting, with 1,235 reports for Diabetes Mellitus, Type 1.
+Obesity was associated with 1,234 serious reports, while the combined Type 2 Diabetes + Obesity category also recorded 1,234 reports.
+Overall, the results indicate that diabetes—particularly Type 2 diabetes—and obesity are the most prominent clinical conditions represented in the serious-event reporting analysis.
