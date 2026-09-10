@@ -1,0 +1,10 @@
+generic_name,phase3_trial_count,phase3_total_enrollment,latest_phase3_completion_date,fda_first_approval_date,post_marketing_report_count,post_marketing_reports_rate
+semaglutide,140,125956,2033-11-01,2017-12-05,14956,11.87
+liraglutide,62,38576,2028-03-31,2010-01-25,9978,25.87
+tirzepatide,24,31876,2029-06-30,2022-05-13,9853,30.91
+exenatide,22,19049,2026-06-30,2005-04-28,9236,48.49
+dulaglutide,12,16949,2030-12-01,2014-09-18,4993,29.46
+albiglutide,4,1496,2020-04-20,2014-04-15,4982,333.02
+lixisenatide,9,3834,2023-10-20,2016-07-27,19,0.5
+orforglipron,8,7509,2026-03-16,,0,0.0
+retatrutide,2,982,2026-02-20,,0,0.0

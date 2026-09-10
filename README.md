@@ -690,3 +690,69 @@ ORDER BY s.company, s.stock_quarter;
 1. Eli Lilly: FAERS reporting increased sharply from 2022 onward, often during periods of strong stock growth.
 2. Novo Nordisk: Stock prices rose substantially through 2024, but FAERS reporting did not consistently follow the same trend.
 3. Overall: FAERS reporting volume and stock performance show some periods of alignment but no consistent direct relationship, suggesting that reporting activity is influenced by factors beyond market performance, such as product adoption, regulatory events, and public attention.
+
+#### Q12: Manufacturer Financial Impact vs. Safety Events
+
+#### Business / Clinical Question 
+Joining trial metadata with safety reports, how do real-world post-marketing reported adverse events compare in frequency to the safety signals reported during Phase 3 clinical trial filings?
+
+---
+#### BigQuery SQL Code
+``` sql
+WITH
+  phase3_trials AS (
+    SELECT
+      LOWER(TRIM(drug_query)) AS generic_name,
+      COUNT(DISTINCT nct_id) AS phase3_trial_count,
+      SUM(enrollment) AS phase3_total_enrollment,
+      MAX(completion_date) AS latest_phase3_completion_date
+    FROM `rasikatest.faers_glp1.clinical_trials`
+    WHERE
+      phase LIKE '%PHASE3%'
+      AND completion_date IS NOT NULL
+    GROUP BY LOWER(TRIM(drug_query))
+  ),
+  drug_info AS (
+    SELECT
+      LOWER(TRIM(generic_name)) AS generic_name,
+      fda_first_approval_date
+    FROM `rasikatest.faers_glp1.drugs_overview`
+  ),
+  post_marketing AS (
+    SELECT
+      LOWER(TRIM(a.generic_name)) AS generic_name,
+      COUNT(DISTINCT a.safetyreportid) AS post_marketing_report_count
+    FROM `rasikatest.faers_glp1.adverse_events` a
+    JOIN drug_info d
+      ON LOWER(TRIM(a.generic_name)) = d.generic_name
+    WHERE a.receive_date > d.fda_first_approval_date
+    GROUP BY LOWER(TRIM(a.generic_name))
+  )
+SELECT
+  p.generic_name,
+  p.phase3_trial_count,
+  p.phase3_total_enrollment,
+  p.latest_phase3_completion_date,
+  d.fda_first_approval_date,
+  COALESCE(m.post_marketing_report_count, 0) AS post_marketing_report_count,
+  COALESCE(
+    ROUND(
+      SAFE_DIVIDE(
+        m.post_marketing_report_count,
+        p.phase3_total_enrollment)
+        * 100,
+      2),
+    0) AS post_marketing_reports_rate
+FROM phase3_trials p
+LEFT JOIN drug_info d
+  ON p.generic_name = d.generic_name
+LEFT JOIN post_marketing m
+  ON p.generic_name = m.generic_name
+ORDER BY post_marketing_report_count DESC;
+```
+
+#### Analytical Insights & Takeaways:
+1. Semaglutide had the largest Phase 3 footprint (140 trials; 125,956 participants) and the highest post-marketing FAERS volume (14,956 reports), but its normalized reporting rate was only 11.87 per 100 participants.
+2. Albiglutide had the highest normalized reporting rate at 333.02 per 100 participants, followed by exenatide (48.49) and tirzepatide (30.91).
+3. Lixisenatide had the lowest rate among approved drugs (0.50 per 100 participants).
+4. Overall, greater Phase 3 enrollment did not consistently correspond to higher post-marketing reporting rates, indicating substantial variation in real-world reporting across drugs.
