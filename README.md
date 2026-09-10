@@ -576,3 +576,117 @@ ORDER BY report_date ASC;
 3. Search interest shows a clear structural break around 2022: From 2013–2021, search_interests is 0 almost everywhere, with only a few small non-zero blips (e.g., 3, 5, 9, 21, 22, 37, 56, 76).
 Starting 2022-08-01, values jump into the hundreds and grow steadily. This growth pattern tracks the well-documented public/media surge in interest around GLP‑1 drugs (Ozempic/Wegovy/semaglutide) from 2022 onwards consistent with the dataset being GLP‑1-drug-related adverse events.
 4. No clear causal link between the search-interest ramp and report anomalies: The largest, most extreme report anomalies (787%–1,722% spikes) occurred before search interest data even registers above zero (2014–2020). Meanwhile, in 2022–2025 — when search interest is at its highest and growing — the anomaly spikes are still present but generally less extreme in percentage terms (mostly 300–800% vs. the >1000% outliers from the pre-2022 period), likely because the baseline (rolling average) itself is higher by then.
+
+#### Q11: Manufacturer Financial Impact vs. Safety Events
+
+#### Business / Clinical Question
+Joining the stock price table for Eli Lilly (LLY) and Novo Nordisk (NVO) with quarterly FAERS data, did stock price volatility correlate with sudden increases in serious adverse event report filings?
+
+---
+#### BigQuery SQL Code
+``` sql
+WITH
+  quarterly_stocks AS (
+    SELECT
+      FORMAT_DATE('%Y-Q%Q', date) AS stock_quarter,
+      company,
+      ROUND(AVG((open + close) / 2), 2) AS avg_price
+    FROM `rasikatest.faers_glp1.stock_prices`
+    WHERE company IN ('Eli Lilly & Company', 'Novo Nordisk A/S')
+    GROUP BY stock_quarter, company
+  ),
+  stock_changes AS (
+    SELECT
+      stock_quarter,
+      company,
+      avg_price,
+      LAG(avg_price)
+        OVER (
+          PARTITION BY company
+          ORDER BY stock_quarter
+        ) AS previous_avg_price,
+      ROUND(
+        (
+          avg_price - LAG(avg_price)
+            OVER (
+              PARTITION BY company
+              ORDER BY stock_quarter
+            ))
+          / NULLIF(
+            LAG(avg_price)
+              OVER (
+                PARTITION BY company
+                ORDER BY stock_quarter
+              ),
+            0)
+          * 100,
+        2) AS stock_price_change_pct
+    FROM quarterly_stocks
+  ),
+  quarterly_reports AS (
+    SELECT
+      FORMAT_DATE('%Y-Q%Q', receive_date) AS report_quarter,
+      CASE
+        WHEN
+          LOWER(brand_queried)
+          IN ('ozempic', 'wegovy', 'rybelsus', 'victoza', 'saxenda')
+          THEN 'Novo Nordisk A/S'
+        WHEN LOWER(brand_queried) IN ('mounjaro', 'zepbound', 'trulicity')
+          THEN 'Eli Lilly & Company'
+        END AS company,
+      COUNT(DISTINCT safetyreportid) AS report_count
+    FROM `rasikatest.faers_glp1.adverse_events`
+    WHERE
+      LOWER(brand_queried)
+      IN (
+        'ozempic', 'wegovy', 'rybelsus', 'victoza', 'saxenda', 'mounjaro',
+        'zepbound', 'trulicity')
+    GROUP BY report_quarter, company
+  ),
+  report_changes AS (
+    SELECT
+      report_quarter,
+      company,
+      report_count,
+      LAG(report_count)
+        OVER (
+          PARTITION BY company
+          ORDER BY report_quarter
+        ) AS previous_report_count,
+      ROUND(
+        (
+          report_count - LAG(report_count)
+            OVER (
+              PARTITION BY company
+              ORDER BY report_quarter
+            ))
+          / NULLIF(
+            LAG(report_count)
+              OVER (
+                PARTITION BY company
+                ORDER BY report_quarter
+              ),
+            0)
+          * 100,
+        2) AS report_change_pct
+    FROM quarterly_reports
+  )
+SELECT
+  s.stock_quarter,
+  s.company,
+  s.avg_price,
+  s.stock_price_change_pct,
+  COALESCE(r.report_count, 0) AS report_count,
+  r.report_change_pct
+FROM stock_changes s
+LEFT JOIN report_changes r
+  ON
+    s.stock_quarter = r.report_quarter
+    AND s.company = r.company
+ORDER BY s.company, s.stock_quarter;
+```
+
+#### Analytical Insights & Takeaways:
+1. Eli Lilly: FAERS reporting increased sharply from 2022 onward, often during periods of strong stock growth.
+2. Novo Nordisk: Stock prices rose substantially through 2024, but FAERS reporting did not consistently follow the same trend.
+3. Overall: FAERS reporting volume and stock performance show some periods of alignment but no consistent direct relationship, suggesting that reporting activity is influenced by factors beyond market performance, such as product adoption, regulatory events, and public attention.

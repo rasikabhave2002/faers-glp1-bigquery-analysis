@@ -1,0 +1,77 @@
+stock_quarter,company,avg_price,stock_price_change_pct,report_count,report_change_pct
+2017-Q1,Eli Lilly & Company,79.99,,0,
+2017-Q2,Eli Lilly & Company,81.58,1.99,2,-99.67
+2017-Q3,Eli Lilly & Company,81.99,0.5,4,100.0
+2017-Q4,Eli Lilly & Company,85.1,3.79,0,
+2018-Q1,Eli Lilly & Company,80.55,-5.35,0,
+2018-Q2,Eli Lilly & Company,82.07,1.89,1,-75.0
+2018-Q3,Eli Lilly & Company,99.81,21.62,1,0.0
+2018-Q4,Eli Lilly & Company,111.74,11.95,2,100.0
+2019-Q1,Eli Lilly & Company,121.4,8.65,4,100.0
+2019-Q2,Eli Lilly & Company,117.93,-2.86,4,0.0
+2019-Q3,Eli Lilly & Company,111.36,-5.57,2,-50.0
+2019-Q4,Eli Lilly & Company,115.82,4.01,10,400.0
+2020-Q1,Eli Lilly & Company,137.06,18.34,4,-60.0
+2020-Q2,Eli Lilly & Company,153.46,11.97,4,0.0
+2020-Q3,Eli Lilly & Company,155.02,1.02,11,175.0
+2020-Q4,Eli Lilly & Company,149.28,-3.7,8,-27.27
+2021-Q1,Eli Lilly & Company,195.58,31.02,8,0.0
+2021-Q2,Eli Lilly & Company,200.63,2.58,8,0.0
+2021-Q3,Eli Lilly & Company,246.86,23.04,4,-50.0
+2021-Q4,Eli Lilly & Company,253.38,2.64,9,125.0
+2022-Q1,Eli Lilly & Company,257.05,1.45,19,111.11
+2022-Q2,Eli Lilly & Company,299.9,16.67,16,-15.79
+2022-Q3,Eli Lilly & Company,316.9,5.67,1271,7843.75
+2022-Q4,Eli Lilly & Company,354.2,11.77,3607,183.79
+2023-Q1,Eli Lilly & Company,337.28,-4.78,3,-99.92
+2023-Q2,Eli Lilly & Company,419.02,24.24,5,66.67
+2023-Q3,Eli Lilly & Company,515.14,22.94,2,-60.0
+2023-Q4,Eli Lilly & Company,583.92,13.35,22,1000.0
+2024-Q1,Eli Lilly & Company,711.23,21.8,1519,6804.55
+2024-Q2,Eli Lilly & Company,799.84,12.46,2278,49.97
+2024-Q3,Eli Lilly & Company,900.55,12.59,1136,-50.13
+2024-Q4,Eli Lilly & Company,828.69,-7.98,0,
+2025-Q1,Eli Lilly & Company,831.15,0.3,0,
+2025-Q2,Eli Lilly & Company,777.69,-6.43,0,
+2025-Q3,Eli Lilly & Company,743.96,-4.34,0,
+2025-Q4,Eli Lilly & Company,953.58,28.18,0,
+2026-Q1,Eli Lilly & Company,1015.5,6.49,0,
+2026-Q2,Eli Lilly & Company,926.57,-8.76,0,
+2017-Q1,Novo Nordisk A/S,17.4,,221,-23.26
+2017-Q2,Novo Nordisk A/S,20.18,15.98,211,-4.52
+2017-Q3,Novo Nordisk A/S,22.57,11.84,249,18.01
+2017-Q4,Novo Nordisk A/S,25.42,12.63,223,-10.44
+2018-Q1,Novo Nordisk A/S,26.28,3.38,221,-0.9
+2018-Q2,Novo Nordisk A/S,23.77,-9.55,224,1.36
+2018-Q3,Novo Nordisk A/S,24.38,2.57,446,99.11
+2018-Q4,Novo Nordisk A/S,22.23,-8.82,654,46.64
+2019-Q1,Novo Nordisk A/S,24.56,10.48,468,-28.44
+2019-Q2,Novo Nordisk A/S,24.71,0.61,302,-35.47
+2019-Q3,Novo Nordisk A/S,25.29,2.35,908,200.66
+2019-Q4,Novo Nordisk A/S,27.67,9.41,462,-49.12
+2020-Q1,Novo Nordisk A/S,29.76,7.55,1521,229.22
+2020-Q2,Novo Nordisk A/S,31.93,7.29,1182,-22.29
+2020-Q3,Novo Nordisk A/S,33.35,4.45,267,-77.41
+2020-Q4,Novo Nordisk A/S,34.6,3.75,258,-3.37
+2021-Q1,Novo Nordisk A/S,35.63,2.98,579,124.42
+2021-Q2,Novo Nordisk A/S,38.73,8.7,179,-69.08
+2021-Q3,Novo Nordisk A/S,48.28,24.66,616,244.13
+2021-Q4,Novo Nordisk A/S,54.16,12.18,595,-3.41
+2022-Q1,Novo Nordisk A/S,51.25,-5.37,1172,96.97
+2022-Q2,Novo Nordisk A/S,55.45,8.2,884,-24.57
+2022-Q3,Novo Nordisk A/S,53.6,-3.34,540,-38.91
+2022-Q4,Novo Nordisk A/S,58.55,9.24,293,-45.74
+2023-Q1,Novo Nordisk A/S,70.88,21.06,802,173.72
+2023-Q2,Novo Nordisk A/S,81.66,15.21,359,-55.24
+2023-Q3,Novo Nordisk A/S,88.07,7.85,1154,221.45
+2023-Q4,Novo Nordisk A/S,98.84,12.23,384,-66.72
+2024-Q1,Novo Nordisk A/S,118.86,20.25,1518,295.31
+2024-Q2,Novo Nordisk A/S,132.42,11.41,609,-59.88
+2024-Q3,Novo Nordisk A/S,133.41,0.75,702,15.27
+2024-Q4,Novo Nordisk A/S,108.18,-18.91,314,-55.27
+2025-Q1,Novo Nordisk A/S,82.74,-23.52,36,-88.54
+2025-Q2,Novo Nordisk A/S,68.11,-17.68,0,
+2025-Q3,Novo Nordisk A/S,58.54,-14.05,0,
+2025-Q4,Novo Nordisk A/S,51.13,-12.66,0,
+2026-Q1,Novo Nordisk A/S,47.43,-7.24,0,
+2026-Q2,Novo Nordisk A/S,38.67,-18.47,0,
