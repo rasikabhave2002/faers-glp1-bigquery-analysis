@@ -808,3 +808,71 @@ Other closely related Type 2 diabetes labels followed closely: Diabetes Mellitus
 Type 1 diabetes also showed substantial reporting, with 1,235 reports for Diabetes Mellitus, Type 1.
 Obesity was associated with 1,234 serious reports, while the combined Type 2 Diabetes + Obesity category also recorded 1,234 reports.
 Overall, the results indicate that diabetes—particularly Type 2 diabetes—and obesity are the most prominent clinical conditions represented in the serious-event reporting analysis.
+
+#### Q14: Discontinuation & Outcome Time-Series
+
+#### Business / Clinical Question 
+What is the median time elapsed between the drug's initial receipt date and report outcome, and does "Time-to-Report" vary significantly by generation of GLP-1 drug (1st gen Exenatide/Liraglutide vs 2nd/3rd gen Semaglutide/Tirzepatide)?
+
+---
+#### BigQuery SQL Code
+``` sql
+WITH drug_dates AS (
+  SELECT
+    d.generic_name,
+    d.fda_first_approval_date
+  FROM `rasikatest.faers_glp1.drugs_overview` d
+  WHERE d.generic_name IN (
+    'exenatide',
+    'liraglutide',
+    'semaglutide',
+    'tirzepatide'
+  )
+    AND d.fda_first_approval_date IS NOT NULL
+),
+
+reports AS (
+  SELECT DISTINCT
+    a.safetyreportid,
+    a.generic_name,
+    a.receive_date,
+    d.fda_first_approval_date,
+
+    DATE_DIFF(
+      a.receive_date,
+      d.fda_first_approval_date,
+      DAY
+    ) AS time_to_report_days,
+
+    CASE
+      WHEN a.generic_name IN ('exenatide', 'liraglutide')
+        THEN '1st Gen'
+      WHEN a.generic_name IN ('semaglutide', 'tirzepatide')
+        THEN '2nd/3rd Gen'
+    END AS generation
+
+  FROM `rasikatest.faers_glp1.adverse_events` a
+  JOIN drug_dates d
+    ON a.generic_name = d.generic_name
+
+  WHERE a.receive_date IS NOT NULL
+    AND a.receive_date >= d.fda_first_approval_date
+)
+
+SELECT
+  generic_name,
+  generation,
+  COUNT(*) AS report_count,
+  APPROX_QUANTILES(time_to_report_days, 100)[OFFSET(25)] AS p25_days,
+  APPROX_QUANTILES(time_to_report_days, 100)[OFFSET(50)] AS median_days,
+  APPROX_QUANTILES(time_to_report_days, 100)[OFFSET(75)] AS p75_days,
+  ROUND(AVG(time_to_report_days), 1) AS mean_days
+FROM reports
+GROUP BY generic_name, generation
+ORDER BY generation, median_days;
+```
+
+#### Analytical Insights & Takeaways:
+1. 2nd/3rd-generation GLP-1 drugs showed substantially shorter median approval-to-report times than 1st-generation drugs. Tirzepatide had the shortest median lag at 600 days, followed by semaglutide at 1,568 days. Among 1st-generation drugs, liraglutide had a median lag of 2,034 days, while exenatide had the longest at 3,557 days.
+2. Overall, the median reporting lag was approximately 2.0–3.6k days for 1st-generation drugs versus 0.6–1.6k days for 2nd/3rd-generation drugs, suggesting that adverse-event reporting in this dataset occurred much sooner after approval for the newer-generation drugs.
+3. The shorter reporting lag for newer-generation GLP-1 drugs may reflect differences in reporting volume, market adoption, regulatory surveillance, media attention, or the availability of these drugs during the study period. Therefore, the observed difference should be interpreted as a descriptive association rather than evidence that drug generation itself causes faster adverse-event reporting.

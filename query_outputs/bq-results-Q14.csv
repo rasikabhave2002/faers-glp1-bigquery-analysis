@@ -1,0 +1,5 @@
+generic_name,generation,report_count,p25_days,median_days,p75_days,mean_days
+liraglutide,1st Gen,9978,1940,2034,2999,2538.2
+exenatide,1st Gen,9236,3340,3557,3739,3572.8
+tirzepatide,2nd/3rd Gen,9853,168,600,725,444.9
+semaglutide,2nd/3rd Gen,14956,806,1568,2093,1470.5
