@@ -887,7 +887,7 @@ The SQL analyses above feed a Looker Studio dashboard. This section summarises w
 
 Dashboard link: https://datastudio.google.com/s/u-QBUqBUiWg
 
-## Headline KPIs
+#### Headline KPIs
 Metric - Value
 Total reports -	149,209
 Serious reports	- 56,817
@@ -898,37 +898,37 @@ Life-threatening rate -	2.29%
 
 Hospitalization makes up roughly half of all serious reports (18.09 / 38.08).
 
-## Reporting Trend Over Time. 
+#### Reporting Trend Over Time. 
 The KPI page includes a daily report-count trend line.
-# Analytical Insights & Takeaways:
+#### Analytical Insights & Takeaways:
 1. The baseline is low and drifts upward. Most days sit under ~250 reports, with small bumps near ~500 in September of both years shown.
 2. Three single-day spikes stand out: ~4,200 (May 2014), ~2,200 (Dec 2014) and ~4,200 (Aug 2015). Together they are about 10,600 reports, or ~7% of the total, from three dates and 20-40x the daily baseline.
 3. These look administrative, not clinical. A one-day jump with immediate reversion is the typical signature of bulk or batch case entry, placeholder dates on records with no event date, or backfilled cases. This matches the Q10 finding that single-day spikes revert to baseline the next reporting day. The trend should be read as a data-quality and reporting-behaviour signal, not a safety event.
 4. Spikes may shift the KPIs. If batch-loaded records differ in seriousness or reporter type, the headline rates (38.08% serious, 3.80% death, 18.09% hospitalization) could move. Re-running the KPIs excluding spike days would test this.
 
-## Page 1: GLP-1 Safety Overview
-# Analytical Insights & Takeaways:
+#### Page 1: GLP-1 Safety Overview
+#### Analytical Insights & Takeaways:
 1. Serious share varies widely by drug. Approximate serious rates: albiglutide ~11%, tirzepatide ~18%, dulaglutide ~29%, exenatide ~39%, semaglutide ~50%, liraglutide ~52%, lixisenatide ~62%. These match the Q1 SQL results (e.g. lixisenatide 61.40%, liraglutide 51.87%, tirzepatide 17.12%).
 2. Counts and proportions tell different stories. The dashboard shows GI vs. systemic counts, where semaglutide dominates (~4.4K) simply because it has the most reports. Q2 shows proportions, where dulaglutide has the highest GI share (25.71%) and liraglutide the highest systemic share (7.58%). Use proportions to compare drugs and counts to gauge volume.
 3. GI signals dominate every drug's profile, consistent with the known mechanism (delayed gastric emptying).
 
-## Page 2: Brand & Outcome Analysis
-# Analytical Insights & Takeaways:
+#### Page 2: Brand & Outcome Analysis
+#### Analytical Insights & Takeaways:
 1. Ozempic reports are more often serious than Wegovy reports (dashboard ~50% vs ~43%; Q3 SQL 39.42% vs 34.48%). The direction agrees; the magnitude differs (see reconciliation below). Indication and patient population are likely confounders.
 2. Pancreatic signals are clinically notable. Pancreatitis (~1.6K) and pancreatic carcinoma (~820) rank #2 and #5 among serious reactions, behind or alongside routine GI events. These are the strongest candidates for formal disproportionality analysis (PRR / ROR).
 
-## Page 3: Patient Patterns
-# Analytical Insights & Takeaways:
+#### Page 3: Patient Patterns
+#### Analytical Insights & Takeaways:
 1. Severity follows a U-shaped curve by age. Volume peaks at 50-70 (~37-38K reports per band). Serious rate is lowest at 30-50 (~39-40%), rises after 70, and reaches ~68% at 90-100. The 0-10 (~85%) and Unknown (~100%) groups rest on very few reports and should not be read as trends.
 2. Many top "serious" reaction-outcome pairs are product-use issues, not clinical harm. Incorrect dose (2,824), device use error (2,619), injection site reactions (2,007), off-label use (1,849) and dose omission (1,689) mostly have unknown outcomes. This supports the Q4 and Q5 findings and points to pen/device usability and dosing education as a distinct problem area.
 3. Fatal outcomes are rare within common GI reactions (e.g. 2 fatal vs 3,328 unknown-outcome nausea reports).
 
-## Page 4: Gender Patterns
-# Analytical Insights & Takeaways:
+#### Page 4: Gender Patterns
+#### Analytical Insights & Takeaways:
 1. Males show higher serious-outcome rates. Across death, disabling, hospitalization and life-threatening outcomes, males reach ~33% vs ~24% for females, driven mainly by death (~4.5% vs ~1.6%) and hospitalization (~23% vs ~18%). This agrees in direction with Q6.
 2. The dashboard rates are below the 38% headline because they exclude other serious categories (e.g. "other medically important").
 
-## Page 5: Search Trends Across the Globe
-# Analytical Insights & Takeaways:
+#### Page 5: Search Trends Across the Globe
+#### Analytical Insights & Takeaways:
 1. Interest is concentrated in the US, UAE, Saudi Arabia, India, Pakistan and the UK. High interest in the Gulf states, paired with sparse adverse-event reporting from those regions, suggests the safety data under-represents them.
 2. Use this view for relative ranking only. search_interest is a normalised 0-100 index, so summing it across dates (as the table does) is not strictly meaningful. As Q10 also found, the search data is sparse and monthly, with a structural jump after mid-2022.
