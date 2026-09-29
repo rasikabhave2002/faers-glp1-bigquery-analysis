@@ -885,7 +885,7 @@ ORDER BY generation, median_days;
 
 The SQL analyses above feed a Looker Studio dashboard. This section summarises what the dashboard shows and cross-checks it against the SQL results. Values read from charts are approximate.
 
-Dashboard link: https://datastudio.google.com/s/nEYLXukuRTI
+Dashboard link: https://datastudio.google.com/s/oSyWbGAeiEw
 
 #### Headline KPIs
 Metric - Value
